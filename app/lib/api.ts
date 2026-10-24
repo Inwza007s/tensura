@@ -5,7 +5,10 @@ import type {
   CharacterDetail,
   CharacterListItem,
   CharacterSkill,
+  EvolutionOption,
+  LineSpecies,
   SpeciesOption,
+  TickState,
 } from "./types";
 
 export async function fetchBiomes(): Promise<Biome[]> {
@@ -41,7 +44,7 @@ export async function fetchCharacter(id: string): Promise<CharacterDetail> {
     .from("slime_characters")
     .select(
       "id,name,start_mode,has_body,body_method,fuel_days,biome_id,created_at," +
-        "species:slime_species!species_id(id,name_en,name_jp,group_name,spirit_line,primary_biome,secondary_biome,biome_confidence)",
+        "species:slime_species!species_id(id,name_en,name_jp,group_name,parent_id,root_id,depth,spirit_line,primary_biome,secondary_biome,biome_confidence)",
     )
     .eq("id", id)
     .single();
@@ -68,4 +71,55 @@ export async function fetchMyCharacters(): Promise<CharacterListItem[]> {
     .limit(20);
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as CharacterListItem[];
+}
+
+// ---------- save slots ----------
+export async function fetchMaxSlots(): Promise<number> {
+  const { data } = await supabase
+    .from("slime_config")
+    .select("value")
+    .eq("key", "characters.max_per_user")
+    .maybeSingle();
+  const n = Number(data?.value);
+  return Number.isFinite(n) && n > 0 ? n : 3;
+}
+
+export async function deleteCharacter(id: string): Promise<void> {
+  const { data, error } = await supabase.from("slime_characters").delete().eq("id", id).select("id");
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error("Could not delete this character.");
+}
+
+// ---------- evolution ----------
+export async function tickCharacter(id: string): Promise<TickState> {
+  const { data, error } = await supabase.rpc("slime_tick", { p_character_id: id });
+  if (error) throw new Error(error.message);
+  return data as TickState;
+}
+
+export async function fetchEvolutionOptions(id: string): Promise<EvolutionOption[]> {
+  const { data, error } = await supabase.rpc("slime_evolution_options", { p_character_id: id });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as EvolutionOption[];
+}
+
+export async function evolveCharacter(id: string, targetSpeciesId: string): Promise<TickState> {
+  const { data, error } = await supabase.rpc("slime_evolve_character", {
+    p_character_id: id,
+    p_target_species_id: targetSpeciesId,
+  });
+  if (error) throw new Error(error.message);
+  return data as TickState;
+}
+
+// every species of one evolution line (same root)
+export async function fetchLine(rootId: string): Promise<LineSpecies[]> {
+  const { data, error } = await supabase
+    .from("slime_species")
+    .select("id,name_en,name_jp,parent_id,depth,primary_biome,evolution_condition")
+    .eq("root_id", rootId)
+    .order("depth")
+    .order("name_en");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as LineSpecies[];
 }

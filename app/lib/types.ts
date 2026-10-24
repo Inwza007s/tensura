@@ -19,6 +19,9 @@ export interface CharacterSpecies {
   name_en: string;
   name_jp: string | null;
   group_name: string;
+  parent_id: string | null;
+  root_id: string | null;
+  depth: number;
   spirit_line: string | null;
   primary_biome: string | null;
   secondary_biome: string | null;
@@ -58,4 +61,34 @@ export interface CharacterListItem {
   name: string;
   created_at: string;
   species: { name_en: string };
+}
+
+// result of slime_tick / slime_evolve_character
+export interface TickState {
+  magicules: number;
+  rate_per_hour: number;
+  species_id: string;
+  synced_at: string;
+}
+
+export interface EvolutionOption {
+  id: string;
+  name_en: string;
+  name_jp: string | null;
+  group_name: string;
+  depth: number;
+  primary_biome: string | null;
+  evolution_condition: string | null;
+  evolution_condition_source: string | null;
+  cost: number;
+}
+
+export interface LineSpecies {
+  id: string;
+  name_en: string;
+  name_jp: string | null;
+  parent_id: string | null;
+  depth: number;
+  primary_biome: string | null;
+  evolution_condition: string | null;
 }
