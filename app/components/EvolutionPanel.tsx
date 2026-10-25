@@ -9,11 +9,12 @@ interface Props {
   speciesId: string; // changes after an evolution -> reload options
   biomeNames: Record<string, string>;
   onEvolved: () => void;
+  refreshKey?: number; // bump to re-sync magicules (e.g. after a hunt)
 }
 
 const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 1 });
 
-export default function EvolutionPanel({ characterId, speciesId, biomeNames, onEvolved }: Props) {
+export default function EvolutionPanel({ characterId, speciesId, biomeNames, onEvolved, refreshKey = 0 }: Props) {
   const [state, setState] = useState<{ tick: TickState; receivedAt: number } | null>(null);
   const [options, setOptions] = useState<EvolutionOption[]>([]);
   const [now, setNow] = useState(() => Date.now());
@@ -32,7 +33,7 @@ export default function EvolutionPanel({ characterId, speciesId, biomeNames, onE
 
   useEffect(() => {
     load();
-  }, [load, speciesId]);
+  }, [load, speciesId, refreshKey]);
 
   // smooth live counter between server syncs (the server stays the source of truth)
   useEffect(() => {

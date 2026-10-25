@@ -92,3 +92,31 @@ export interface LineSpecies {
   primary_biome: string | null;
   evolution_condition: string | null;
 }
+
+export interface HuntStatus {
+  stamina: number;
+  stamina_max: number;
+  regen_per_hour: number;
+  cost: number;
+  biome_id: string | null;
+  devour: { skill: string; chance: number }[];
+  synced_at: string;
+}
+
+export interface HuntResult {
+  won: boolean;
+  win_chance: number;
+  reward: number;
+  devoured: boolean;
+  prey: { id: string; name_en: string; name_jp: string | null; depth: number };
+  skill: { id: string; name: string; effect: string | null } | null;
+  stamina: number;
+  magicules: number;
+  synced_at: string;
+}
+
+export interface PreyPreview {
+  id: string;
+  name_en: string;
+  depth: number;
+}

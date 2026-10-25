@@ -6,7 +6,10 @@ import type {
   CharacterListItem,
   CharacterSkill,
   EvolutionOption,
+  HuntResult,
+  HuntStatus,
   LineSpecies,
+  PreyPreview,
   SpeciesOption,
   TickState,
 } from "./types";
@@ -122,4 +125,32 @@ export async function fetchLine(rootId: string): Promise<LineSpecies[]> {
     .order("name_en");
   if (error) throw new Error(error.message);
   return (data ?? []) as LineSpecies[];
+}
+
+// ---------- hunting ----------
+export async function fetchHuntStatus(id: string): Promise<HuntStatus> {
+  const { data, error } = await supabase.rpc("slime_hunt_status", { p_character_id: id });
+  if (error) throw new Error(error.message);
+  return data as HuntStatus;
+}
+
+export async function hunt(id: string): Promise<HuntResult> {
+  const { data, error } = await supabase.rpc("slime_hunt", { p_character_id: id });
+  if (error) throw new Error(error.message);
+  return data as HuntResult;
+}
+
+// creatures that can show up when hunting in a biome (same filter the server uses, without the depth limit)
+export async function fetchPreyPreview(biomeId: string): Promise<PreyPreview[]> {
+  const { data, error } = await supabase
+    .from("slime_species")
+    .select("id,name_en,depth")
+    .eq("primary_biome", biomeId)
+    .eq("media", "Main")
+    .neq("group_name", "Humanity")
+    .not("group_name", "like", "Spirit%")
+    .order("depth")
+    .order("name_en");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as PreyPreview[];
 }

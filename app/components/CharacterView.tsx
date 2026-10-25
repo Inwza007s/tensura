@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AuthGate from "./AuthGate";
 import CharacterCard from "./CharacterCard";
 import EvolutionPanel from "./EvolutionPanel";
+import HuntPanel from "./HuntPanel";
 import LineTree from "./LineTree";
 import { fetchBiomes, fetchCharacter, fetchLine } from "../lib/api";
 import type { Biome, CharacterDetail, LineSpecies } from "../lib/types";
@@ -18,6 +19,7 @@ export default function CharacterView() {
   const [biomes, setBiomes] = useState<Biome[]>([]);
   const [line, setLine] = useState<LineSpecies[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const biomeNames = useMemo(
     () => Object.fromEntries(biomes.map((b) => [b.id, b.name])) as Record<string, string>,
@@ -55,11 +57,21 @@ export default function CharacterView() {
       {detail && (
         <>
           <CharacterCard detail={detail} biomeNames={biomeNames} />
+          <HuntPanel
+            characterId={detail.character.id}
+            biomeId={detail.character.biome_id}
+            biomeNames={biomeNames}
+            onHunted={(r) => {
+              setRefreshKey((k) => k + 1); // resync the magicule counter
+              if (r.skill) reload(); // a new skill: refresh the skill list
+            }}
+          />
           <EvolutionPanel
             characterId={detail.character.id}
             speciesId={detail.character.species.id}
             biomeNames={biomeNames}
             onEvolved={reload}
+            refreshKey={refreshKey}
           />
           <LineTree line={line} currentId={detail.character.species.id} />
         </>
