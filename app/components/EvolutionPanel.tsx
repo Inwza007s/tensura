@@ -8,7 +8,7 @@ interface Props {
   characterId: string;
   speciesId: string; // changes after an evolution -> reload options
   biomeNames: Record<string, string>;
-  onEvolved: () => void;
+  onEvolved: (tick: TickState) => void;
   refreshKey?: number; // bump to re-sync magicules (e.g. after a hunt)
 }
 
@@ -20,6 +20,7 @@ export default function EvolutionPanel({ characterId, speciesId, biomeNames, onE
   const [now, setNow] = useState(() => Date.now());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [gained, setGained] = useState<NonNullable<TickState["new_skills"]> | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -32,8 +33,18 @@ export default function EvolutionPanel({ characterId, speciesId, biomeNames, onE
   }, [characterId]);
 
   useEffect(() => {
-    load();
-  }, [load, speciesId, refreshKey]);
+    let cancelled = false;
+    Promise.all([tickCharacter(characterId), fetchEvolutionOptions(characterId)])
+      .then(([tick, opts]) => {
+        if (cancelled) return;
+        setState({ tick, receivedAt: Date.now() });
+        setOptions(opts);
+      })
+      .catch((e) => !cancelled && setError(e instanceof Error ? e.message : String(e)));
+    return () => {
+      cancelled = true;
+    };
+  }, [characterId, speciesId, refreshKey]);
 
   // smooth live counter between server syncs (the server stays the source of truth)
   useEffect(() => {
@@ -50,8 +61,10 @@ export default function EvolutionPanel({ characterId, speciesId, biomeNames, onE
     setBusyId(opt.id);
     try {
       const tick = await evolveCharacter(characterId, opt.id);
+      // eslint-disable-next-line react-hooks/purity -- runs in a click handler after an await, not during render
       setState({ tick, receivedAt: Date.now() });
-      onEvolved();
+      setGained(tick.new_skills ?? []);
+      onEvolved(tick);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       load(); // resync numbers after a refusal
@@ -82,6 +95,24 @@ export default function EvolutionPanel({ characterId, speciesId, biomeNames, onE
       </p>
 
       {error && <p className="mt-4 font-mono text-xs text-danger">{error}</p>}
+
+      {gained && (
+        <div className="mt-4 border border-ok bg-panel-2 p-3 font-mono text-xs text-ok">
+          <p className="uppercase tracking-wider">Evolution complete!</p>
+          {gained.length === 0 ? (
+            <p className="text-muted">This form brings no new innate skill (the wiki lists none for it).</p>
+          ) : (
+            <ul className="mt-1">
+              {gained.map((k) => (
+                <li key={k.id}>
+                  NEW SKILL: {k.name}
+                  {k.game_effect && <span className="text-muted"> — {k.game_effect}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <h3 className="mt-8 font-display text-2xl tracking-widest">NEXT FORMS</h3>
       {options.length === 0 ? (

@@ -10,7 +10,10 @@ import type {
   HuntStatus,
   LineSpecies,
   PreyPreview,
+  SkillInfo,
   SpeciesOption,
+  StatKey,
+  StatSheet,
   TickState,
 } from "./types";
 
@@ -55,7 +58,7 @@ export async function fetchCharacter(id: string): Promise<CharacterDetail> {
 
   const { data: sk, error: skErr } = await supabase
     .from("slime_character_skills")
-    .select("source,skill:slime_skills(id,name,tier_wiki,effect,wiki_url)")
+    .select("source,skill:slime_skills(id,name,tier_group,tier_wiki,effect,game_effect,wiki_url)")
     .eq("character_id", id)
     .order("acquired_at");
   if (skErr) throw new Error(skErr.message);
@@ -153,4 +156,31 @@ export async function fetchPreyPreview(biomeId: string): Promise<PreyPreview[]> 
     .order("name_en");
   if (error) throw new Error(error.message);
   return (data ?? []) as PreyPreview[];
+}
+
+// ---------- stats ----------
+export async function fetchStats(id: string): Promise<StatSheet> {
+  const { data, error } = await supabase.rpc("slime_char_stats", { p_character_id: id });
+  if (error) throw new Error(error.message);
+  return data as StatSheet;
+}
+
+export async function allocateStat(id: string, stat: StatKey, points: number): Promise<StatSheet> {
+  const { data, error } = await supabase.rpc("slime_allocate_stat", {
+    p_character_id: id,
+    p_stat: stat,
+    p_points: points,
+  });
+  if (error) throw new Error(error.message);
+  return data as StatSheet;
+}
+
+// ---------- skill library ----------
+export async function fetchAllSkills(): Promise<SkillInfo[]> {
+  const { data, error } = await supabase
+    .from("slime_skills")
+    .select("id,name,tier_group,tier_wiki,effect,game_effect,wiki_url")
+    .order("name");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as SkillInfo[];
 }

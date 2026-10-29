@@ -54,37 +54,9 @@ export default function CharacterCard({ detail, biomeNames }: Props) {
         </div>
       </div>
 
-      <h3 className="mt-8 font-display text-2xl tracking-widest">
-        UNIQUE SKILL{bonus ? "S" : ""}
-        {bonus && (
-          <span className="ml-3 border border-ok px-2 font-mono text-xs uppercase text-ok">
-            bonus roll!
-          </span>
-        )}
-      </h3>
-      <div className="mt-3 space-y-3">
-        {skills.map(({ skill }) => (
-          <article key={skill.id} className="border border-border bg-panel-2 p-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="font-display text-3xl tracking-wider">{skill.name}</span>
-              {skill.tier_wiki && (
-                <span className="font-mono text-[11px] uppercase text-muted">{skill.tier_wiki}</span>
-              )}
-            </div>
-            {skill.effect && <p className="mt-2 text-sm text-muted">{skill.effect}</p>}
-            {skill.wiki_url && (
-              <a
-                href={skill.wiki_url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 inline-block font-mono text-[11px] uppercase tracking-wider text-accent underline"
-              >
-                wiki page ↗
-              </a>
-            )}
-          </article>
-        ))}
-      </div>
+      <p className="mt-6 font-mono text-xs uppercase tracking-wider text-muted">
+        {skills.length} skill{skills.length === 1 ? "" : "s"} owned{bonus ? " · bonus Unique roll!" : ""}
+      </p>
     </section>
   );
 }

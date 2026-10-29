@@ -40,15 +40,21 @@ export interface Character {
   species: CharacterSpecies;
 }
 
+export type TierGroup = "common" | "extra" | "unique" | "ultimate" | "other";
+
+export interface SkillInfo {
+  id: string;
+  name: string;
+  tier_group: TierGroup;
+  tier_wiki: string | null;
+  effect: string | null;
+  game_effect: string | null;
+  wiki_url: string | null;
+}
+
 export interface CharacterSkill {
-  source: string;
-  skill: {
-    id: string;
-    name: string;
-    tier_wiki: string | null;
-    effect: string | null;
-    wiki_url: string | null;
-  };
+  source: string; // start | species | devour:SPxxx
+  skill: SkillInfo;
 }
 
 export interface CharacterDetail {
@@ -69,6 +75,7 @@ export interface TickState {
   rate_per_hour: number;
   species_id: string;
   synced_at: string;
+  new_skills?: { id: string; name: string; game_effect: string | null }[]; // only after an evolution
 }
 
 export interface EvolutionOption {
@@ -100,11 +107,43 @@ export interface HuntStatus {
   cost: number;
   biome_id: string | null;
   devour: { skill: string; chance: number }[];
+  power: number;
+  level: number;
   synced_at: string;
+}
+
+export type StatKey = "str" | "vit" | "agi" | "mag" | "wil";
+
+export interface StatSheet {
+  level: number;
+  exp: number;
+  exp_needed: number;
+  stat_points: number;
+  auto: number;
+  power: number;
+  base: Record<StatKey, number>;
+  alloc: Record<StatKey, number>;
+  skill: Record<StatKey, number>;
+  total: Record<StatKey, number>;
+  bonus: {
+    win_pct: number;
+    reward_pct: number;
+    xp_pct: number;
+    income_pct: number;
+    stamina_regen_pct: number;
+  };
 }
 
 export interface HuntResult {
   won: boolean;
+  xp: number;
+  levels_gained: number;
+  level: number;
+  exp: number;
+  exp_needed: number;
+  stat_points: number;
+  player_power: number;
+  prey_power: number;
   win_chance: number;
   reward: number;
   devoured: boolean;

@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Slime (Tensura) game
 
-## Getting Started
+Next.js 16 · App Router · TypeScript · Tailwind v4 · Supabase (tables prefixed `slime_`).
 
-First, run the development server:
+## Routes (path → file → what it is)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+| Path | File | Page |
+|---|---|---|
+| `/` | `app/page.tsx` | Save slots (3) + reincarnation: random roll or choose species |
+| `/character/:id` | `app/character/[id]/page.tsx` | **Status**: species, biome, body, level, stats |
+| `/character/:id/hunt` | `app/character/[id]/hunt/page.tsx` | **Hunt**: stamina, fight prey in your biome, devour for skills |
+| `/character/:id/evolve` | `app/character/[id]/evolve/page.tsx` | **Evolve**: magicules, next forms, full evolution line |
+| `/character/:id/skills` | `app/character/[id]/skills/page.tsx` | **Skills**: mine by tier + all 294 skills |
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Layouts: `app/layout.tsx` (every page: theme, fonts, navbar) and `app/character/[id]/layout.tsx`
+(every `/character/:id/*` page: loads the character once and shares it).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Folders
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/components/` UI pieces (NavBar, AuthGate, SpeciesPicker, CharacterCard, StatsPanel, HuntPanel, EvolutionPanel, LineTree, SkillsView, ...)
+- `app/lib/` Supabase client, API calls, types, session hook, character context
 
-## Learn More
+## Setup
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. `.env.local`: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. Database: run the SQL files 001 → 006 (in `slime-db/`) in the Supabase SQL editor
+3. `npm install` then `npm run dev`

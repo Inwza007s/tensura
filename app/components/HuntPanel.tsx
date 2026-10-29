@@ -31,8 +31,14 @@ export default function HuntPanel({ characterId, biomeId, biomeNames, onHunted }
   }, [characterId]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    fetchHuntStatus(characterId)
+      .then((status) => !cancelled && setState({ status, receivedAt: Date.now() }))
+      .catch((e) => !cancelled && setError(e instanceof Error ? e.message : String(e)));
+    return () => {
+      cancelled = true;
+    };
+  }, [characterId]);
 
   useEffect(() => {
     if (!biomeId) return;
@@ -94,6 +100,9 @@ export default function HuntPanel({ characterId, biomeId, biomeNames, onHunted }
           </div>
         </div>
         <div className="border border-border bg-panel-2 p-4">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-muted">
+            Power {s ? fmt(s.power) : "–"} · Lv {s ? s.level : "–"}
+          </p>
           <p className="font-mono text-[11px] uppercase tracking-wider text-muted">Devour</p>
           {s && s.devour.length > 0 ? (
             <ul className="mt-1 font-mono text-sm text-ok">
@@ -134,8 +143,17 @@ export default function HuntPanel({ characterId, biomeId, biomeNames, onHunted }
               }`}
             >
               {r.won ? "WON" : "LOST"} vs {r.prey.name_en}
-              <span className="text-muted"> (tier {r.prey.depth}, {Math.round(r.win_chance * 100)}% to win)</span>
+              <span className="text-muted">
+                {" "}
+                (power {fmt(r.player_power)} vs {fmt(r.prey_power)}, {Math.round(r.win_chance * 100)}% to win)
+              </span>
               {r.won && <span> · +{fmt(r.reward)} magicules{r.devoured ? " (devoured)" : ""}</span>}
+              <span className="text-muted"> · +{fmt(r.xp)} XP</span>
+              {r.levels_gained > 0 && (
+                <div className="mt-1 text-accent">
+                  LEVEL UP! Now level {r.level} · {r.stat_points} stat point{r.stat_points === 1 ? "" : "s"} to spend (Status page)
+                </div>
+              )}
               {r.skill && (
                 <div className="mt-1 text-warn">
                   NEW SKILL: {r.skill.name}
